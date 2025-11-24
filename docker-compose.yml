@@ -1,0 +1,68 @@
+version: '3.8'
+services:
+  # Service 1: PHP App
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: sipma-app
+    container_name: sipma-app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    networks:
+      - sipma-network
+
+  # Service 2: Nginx Web Server
+  web:
+    image: nginx:alpine
+    container_name: sipma-web
+    restart: unless-stopped
+    ports:
+      - "8085:80"
+    volumes:
+      - ./:/var/www
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+    depends_on:
+      - app
+    networks:
+      - sipma-network
+
+  # Service 3: Database
+  db:
+    image: mysql:8.0
+    container_name: sipma-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: sipma_db
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_PASSWORD: password
+      MYSQL_USER: sipma_user
+    ports:
+      - "3309:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - sipma-network
+
+  # Service 4: PHPMyAdmin (Opsional - Port 8086)
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: sipma-pma
+    links:
+      - db:db
+    ports:
+      - "8086:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: password
+    networks:
+      - sipma-network
+
+networks:
+  sipma-network:
+    driver: bridge
+
+volumes:
+  dbdata:
