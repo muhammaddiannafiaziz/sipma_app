@@ -7,6 +7,7 @@ use Filament\Models\Contracts\FilamentUser; // Pastikan ini ada
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use BezhanSalleh\FilamentShield\Traits\HasPanelShield;
 use Spatie\Permission\Traits\HasRoles;
 use Filament\Panel;
 
@@ -15,6 +16,7 @@ class User extends Authenticatable implements FilamentUser
 {
     use HasFactory, Notifiable;
     use HasRoles;
+    use HasPanelShield;
 
     protected $fillable = [
         'name',
@@ -38,31 +40,27 @@ class User extends Authenticatable implements FilamentUser
     public function canAccessPanel(Panel $panel): bool
     {
         // 1. Panel Admin (Pusat Manajemen)
-        // Akses: Super Admin & Staff
         if ($panel->getId() === 'admin') {
-            return $this->hasRole(['super_admin', 'staff']);
+            // PERBAIKAN: Gunakan 'admin' bukan 'staff' sesuai RoleSeeder
+            return $this->hasRole(['super_admin', 'admin']);
         }
 
-        // 2. Panel Dosen (Akademik Pengajar)
-        // Akses: Super Admin & Dosen
+        // 2. Panel Dosen
         if ($panel->getId() === 'dosen') {
             return $this->hasRole(['super_admin', 'dosen']);
         }
 
-        // 3. Panel Musyrif (Kesantrian Asrama)
-        // Akses: Super Admin & Musyrif
+        // 3. Panel Musyrif
         if ($panel->getId() === 'musyrif') {
             return $this->hasRole(['super_admin', 'musyrif']);
         }
 
-        // 4. Panel Santri (Portal Mahasantri/Pendaftar)
-        // Akses: Santri (Aktif) & Pendaftar (Calon)
-        // Catatan: Super Admin TIDAK masuk sini agar tidak mengotori data santri
+        // 4. Panel Santri
         if ($panel->getId() === 'santri') {
-            return $this->hasRole(['santri', 'pendaftar']);
+            // PERBAIKAN: Hapus 'pendaftar' dulu karena role belum dibuat di seeder
+            return $this->hasRole(['santri']);
         }
 
-        // Default: Blokir akses ke panel lain yang tidak terdefinisi
         return false;
     }
 }

@@ -53,9 +53,10 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
-            ->plugins([
+            ->plugins(array_filter([
                 FilamentShieldPlugin::make(),
-            ])
+                class_exists('STS\\FilamentImpersonate\\FilamentImpersonatePlugin') ? forward_static_call(['STS\\FilamentImpersonate\\FilamentImpersonatePlugin', 'make']) : null,
+            ]))
             ->authMiddleware([
                 Authenticate::class,
             ]);
