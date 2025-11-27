@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Santri\Pages\Auth\Login; // IMPORT CLASS LOGIN CUSTOM
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -25,13 +26,15 @@ class SantriPanelProvider extends PanelProvider
         return $panel
             ->id('santri')
             ->path('santri')
-            ->login() // Halaman Login: /santri/login
-            // ->registration() // KITA MATIKAN (Comment/Hapus) agar lewat "The Gate"
+            
+            // PERBAIKAN: Gunakan Class Login Custom (NIM)
+            ->login(Login::class) 
+            
             ->colors([
-                'primary' => Color::Emerald, // Identitas Visual: Hijau
+                'primary' => Color::Emerald,
             ])
-            ->brandName('Portal Santri') // Branding
-            ->favicon(asset('images/favicon.ico')) // Opsional, jika ada
+            ->brandName('Portal Santri')
+            ->favicon(asset('images/favicon.ico'))
             ->font('IBM Plex Sans')
             ->discoverResources(in: app_path('Filament/Santri/Resources'), for: 'App\\Filament\\Santri\\Resources')
             ->discoverPages(in: app_path('Filament/Santri/Pages'), for: 'App\\Filament\\Santri\\Pages')
@@ -40,9 +43,7 @@ class SantriPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Santri/Widgets'), for: 'App\\Filament\\Santri\\Widgets')
             ->widgets([
-                // KITA KOSONGKAN DEFAULT WIDGET AGAR DASHBOARD BERSIH
-                // Widgets\AccountWidget::class,
-                // Widgets\FilamentInfoWidget::class,
+                // Default widgets dimatikan agar bersih
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -58,7 +59,6 @@ class SantriPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
-            // Aktifkan Edit Profil sederhana
-            ->profile(isSimple: false); 
+            ->profile(isSimple: false);
     }
 }
