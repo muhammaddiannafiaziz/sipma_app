@@ -36,6 +36,7 @@ class SantriPanelProvider extends PanelProvider
             ->brandName('Portal Santri')
             ->favicon(asset('images/favicon.ico'))
             ->font('IBM Plex Sans')
+            ->viteTheme('resources/css/app.css')
             ->discoverResources(in: app_path('Filament/Santri/Resources'), for: 'App\\Filament\\Santri\\Resources')
             ->discoverPages(in: app_path('Filament/Santri/Pages'), for: 'App\\Filament\\Santri\\Pages')
             ->pages([

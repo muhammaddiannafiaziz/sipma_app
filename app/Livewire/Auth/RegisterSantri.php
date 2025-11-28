@@ -94,7 +94,7 @@ class RegisterSantri extends Component
         // Buat User 
         $user = User::create([
             'name' => $this->studentData['nama_lengkap'],
-            'email' => $this->nim . '@student.uin.ac.id',
+            'email' => $this->nim . '@mhs.uinsaid.ac.id',
             'identity_number' => $this->nim,
             'password' => Hash::make($this->password),
             'is_active' => true,
