@@ -12,7 +12,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Actions\EditAction;
+use Filament\Actions\EditAction;
+
 
 // 1. Komponen INPUT tetap di 'Forms'
 use Filament\Forms\Components\FileUpload;
@@ -31,7 +32,7 @@ class AdmissionResource extends Resource
 {
     protected static ?string $model = Admission::class;
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-document-text';
-    protected static ?string $navigationLabel = 'Misi Pemberkasan';
+    protected static ?string $navigationLabel = 'Pendaftaran';
     protected static ?string $pluralModelLabel = 'Berkas Pendaftaran';
 
     public static function form(Schema $schema): Schema
@@ -57,7 +58,8 @@ class AdmissionResource extends Resource
                                         ->label('No. WhatsApp')
                                         ->tel()
                                         ->required(),
-                                ])->columns(2),
+                                ])->columns(2)
+                                ->disabled(fn ($record) => self::isReadOnly($record)),
                         ]),
 
                     // LEVEL 2: Domisili & Orang Tua (Target: student_profiles)
@@ -73,14 +75,16 @@ class AdmissionResource extends Resource
                                     TextInput::make('kabupaten')->label('Kabupaten/Kota')->required(),
                                     TextInput::make('provinsi')->required(),
                                     TextInput::make('kode_pos')->numeric()->required(),
-                                ])->columns(2),
+                                ])->columns(2)
+                                ->disabled(fn ($record) => self::isReadOnly($record)),
 
                             Section::make('Data Orang Tua / Wali')
                                 ->schema([
                                     TextInput::make('nama_ortu')->label('Nama Ayah/Ibu')->required(),
                                     TextInput::make('pekerjaan_ortu')->label('Pekerjaan')->required(),
                                     TextInput::make('nohp_ortu')->label('No. HP Orang Tua')->tel()->required(),
-                                ])->columns(2),
+                                ])->columns(2)
+                                ->disabled(fn ($record) => self::isReadOnly($record)),
                         ]),
 
                     // LEVEL 3: Akademik (Target: admissions)
@@ -95,7 +99,7 @@ class AdmissionResource extends Resource
                                     TextInput::make('nama_pondok')->label('Nama Pondok')->visible(fn($get) => $get('pernah_mondok'))->required(fn($get) => $get('pernah_mondok')),
                                     TextInput::make('lama')->label('Lama Mondok (Tahun)')->numeric()->visible(fn($get) => $get('pernah_mondok')),
                                     Textarea::make('prestasi')->label('Prestasi (Opsional)'),
-                                ]),
+                                ])->disabled(fn ($record) => self::isReadOnly($record)),
                         ]),
 
                     // LEVEL 4: Upload (Target: admissions)
@@ -105,8 +109,8 @@ class AdmissionResource extends Resource
                         ->schema([
                             Section::make('Berkas Digital')
                                 ->schema([
-                                    FileUpload::make('pas_foto')->image()->avatar()->directory('admissions/photos')->maxSize(2048)->required(),
-                                    FileUpload::make('uploaded_files')->label('Ijazah & KK (PDF)')->directory('admissions/documents')->acceptedFileTypes(['application/pdf'])->maxSize(5120)->required(),
+                                    FileUpload::make('pas_foto')->image()->avatar()->directory('admissions/photos')->maxSize(300)->required(),
+                                    FileUpload::make('uploaded_files')->label('Ijazah & KK (PDF)')->directory('admissions/documents')->acceptedFileTypes(['application/pdf'])->maxSize(2048)->required(),
                                 ]),
                         ]),
                 ])->columnSpanFull(),
@@ -127,7 +131,26 @@ class AdmissionResource extends Resource
                     default => 'info',
                 }),
             ])
-            ->actions([EditAction::make()->label('Lanjutkan Misi')]);
+            ->recordActions([EditAction::make()->label('Lanjutkan Misi')]);
+    }
+
+    // Helper untuk mengecek apakah Form harus dikunci
+    public static function isReadOnly($record): bool
+    {
+        // 1. Kalau record belum ada (Halaman Create), jangan dikunci
+        if (! $record) return false;
+
+        // 2. Kalau status masih 'draft', jangan dikunci (masih boleh edit bebas)
+        if ($record->status === 'draft') return false;
+
+        // 3. Kalau user adalah SUPER ADMIN yang sedang NYAMAR (Impersonate), jangan dikunci
+        // Kita cek apakah fungsi impersonate aktif
+        if (app('impersonate')->isImpersonating()) {
+            return false;
+        }
+
+        // Default: KUNCI (return true) jika sudah submit dan bukan impersonate
+        return true;
     }
 
     public static function getPages(): array
